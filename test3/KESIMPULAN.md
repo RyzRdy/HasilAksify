@@ -59,6 +59,14 @@ Hasil akhir dari validator dapat dilihat pada file berikut:
     "tingkat_kepercayaan": "Sedang"
 }
 ```
+Teks Sebenarnya:
+```
+Pemerintah Kabupaten Karangasem.
+Dinas Pendidikan Kepemudaan dan Olahraga
+SMP Negeri 1 Amlapura.
+Jalan Ngurah Rai, Telepon: (0363) 21288, Amlapura.
+```
+****
 [Klik untuk melihat ValidatorOutput.json](ValidatorOutput.json)
 
 Validator digunakan untuk memeriksa kesesuaian antara:
