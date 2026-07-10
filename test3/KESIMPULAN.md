@@ -47,7 +47,18 @@ Gambar berikut menunjukkan data atau prompt yang dikirimkan ke LLM.
 ## 4. Hasil Validasi
 
 Hasil akhir dari validator dapat dilihat pada file berikut:
-
+```json
+{
+    "bacaan_mentah": "pemerintah kabupaten karangasem dinas pendidikan kepemudaan olahraga es em pe negeri 1 amlapura jalan ngurah rai telp 0363 2128 amlapura",
+    "normalisasi_kamus": {
+        "sebelum": "es em pe; kepemudaan olahraga; telp 0363 2128",
+        "sesudah": "SMP; Kepemudaan dan Olahraga; Telp. 0363 2128",
+        "alasan": "Bacaan 'es em pe' dinormalisasi menjadi akronim umum 'SMP'. Rangkaian konteks instansi pemerintah dan pendidikan mendukung frasa baku 'Kepemudaan dan Olahraga'. Penulisan 'telp' dinormalisasi sebagai singkatan umum 'Telp.' tanpa mengubah angka yang terbaca."
+    },
+    "hasil_akhir": "Pemerintah Kabupaten Karangasem\nDinas Pendidikan Kepemudaan dan Olahraga\nSMP Negeri 1 Amlapura\nJalan Ngurah Rai Telp. 0363 2128 Amlapura",
+    "tingkat_kepercayaan": "Sedang"
+}
+```
 [Klik untuk melihat ValidatorOutput.json](ValidatorOutput.json)
 
 Validator digunakan untuk memeriksa kesesuaian antara:
