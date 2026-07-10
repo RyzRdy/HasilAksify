@@ -131,7 +131,10 @@ Alur penggunaan LLM Tester:
 
 > [!NOTE]
 > Penggunaan LLM Tester memerlukan koneksi internet dan akses ke layanan Pollinations API (apikey). Ketersediaan model, format respons, batas penggunaan, dan perilaku layanan dapat berubah mengikuti konfigurasi penyedia API.
-> Gunakan APIKey sementara: sk_dgssiEV2Y8IM8eDb3uzlXPxGFMAKECzL atau Buat APIKey pada https://enter.pollinations.ai/#keys
+<details>
+<summary>Buat APIKey pada https://enter.pollinations.ai/#keys atau Gunakan APIKey sementara:</summary>
+ sk_dgssiEV2Y8IM8eDb3uzlXPxGFMAKECzL
+</details>
 
 ## Catatan
 
