@@ -59,6 +59,13 @@ Hasil akhir dari validator dapat dilihat pada file berikut:
     "tingkat_kepercayaan": "Sedang"
 }
 ```
+Teks Sebenarnya:
+```
+Merajan
+Pekak Wung/Wiyasa.
+Banjar Gaduh, Desa Adat Sesetan.
+```
+****
 [Klik untuk melihat ValidatorOutput.json](ValidatorOutput.json)
 
 Validator digunakan untuk memeriksa kesesuaian antara:
