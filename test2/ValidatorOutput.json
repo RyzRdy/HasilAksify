@@ -1,0 +1,10 @@
+{
+    "bacaan_mentah": "pemberdayaan dan kesejahteraan kaluwarga\npkk\ntim penggerak kelurahan karangasema",
+    "normalisasi_kamus": {
+        "sebelum": "pemberdayaan dan kesejahteraan kaluwarga pkk tim penggerak kelurahan karangasema",
+        "sesudah": "Pemberdayaan dan Kesejahteraan Keluarga PKK Tim Penggerak Kelurahan Karangasem",
+        "alasan": "Bacaan membentuk frasa kelembagaan yang lazim: PKK sebagai singkatan dari Pemberdayaan dan Kesejahteraan Keluarga, serta Karangasem sebagai nama tempat; bentuk akhir dinormalisasi ke ejaan Latin Indonesia yang umum."
+    },
+    "hasil_akhir": "Pemberdayaan dan Kesejahteraan Keluarga\nPKK\nTim Penggerak Kelurahan Karangasem",
+    "tingkat_kepercayaan": "Sedang"
+}
