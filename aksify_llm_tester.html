@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKSIFY - LLM System Prompt Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6 border-b border-gray-200 pb-4">
+            <h1 class="text-3xl font-bold text-gray-900">AKSIFY LLM Tester</h1>
+            <p class="text-gray-600 mt-1">Platform Pengujian System Prompt Transliterasi Aksara Bali (Menggunakan Pollinations API)</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Kolom Kiri: Input -->
+            <div class="flex flex-col gap-4">
+                
+                <!-- Pengaturan API -->
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-3">Pengaturan API</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pollinations API Key (Opsional/Publishable)</label>
+                            <input type="password" id="apiKey" placeholder="pk_... atau biarkan kosong" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Model LLM</label>
+                            <input type="text" id="modelSelect" list="modelOptions" value="openai" placeholder="Ketik nama model..." class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <datalist id="modelOptions">
+                                <option value="openai">
+                                <option value="gemini">
+                                <option value="gemini-large">
+                                <option value="claude">
+                                <option value="qwen-coder-large">
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Prompt -->
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex-grow flex flex-col">
+                    <h2 class="text-lg font-semibold mb-2">System Prompt</h2>
+                    <p class="text-xs text-gray-500 mb-2">Instruksi utama untuk agen LLM (sudah terisi dengan prompt penelitian final).</p>
+                    <textarea id="systemPrompt" class="w-full p-3 border border-gray-300 rounded flex-grow font-mono text-xs focus:ring-blue-500 focus:border-blue-500 min-h-[250px] resize-y whitespace-pre"></textarea>
+                </div>
+
+                <!-- User Input (Data Anotasi) -->
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex-grow flex flex-col">
+                    <h2 class="text-lg font-semibold mb-2">Data Anotasi YOLO (User Input)</h2>
+                    <p class="text-xs text-gray-500 mb-2">Masukkan data JSON ekstraksi Bounding Box (contoh overlap L.1.b disertakan).</p>
+                    <textarea id="userInput" class="w-full p-3 border border-gray-300 rounded flex-grow font-mono text-xs focus:ring-blue-500 focus:border-blue-500 min-h-[150px] resize-y whitespace-pre"></textarea>
+                </div>
+
+                <!-- Tombol Eksekusi -->
+                <button id="runBtn" onclick="runInference()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition duration-200 flex items-center justify-center">
+                    Jalankan Transliterasi
+                </button>
+                
+                <!-- Pesan Error -->
+                <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded text-sm"></div>
+            </div>
+
+            <!-- Kolom Kanan: Output -->
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col h-full">
+                <div class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-center rounded-t-lg">
+                    <h2 class="text-lg font-semibold">Hasil Keluaran (Output JSON)</h2>
+                    <button onclick="copyOutput()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Salin Hasil</button>
+                </div>
+                <div class="p-0 flex-grow relative bg-gray-900 rounded-b-lg overflow-hidden">
+                    
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="hidden absolute inset-0 bg-gray-900 bg-opacity-75 flex flex-col items-center justify-center z-10 text-white">
+                        <div class="loader mb-3"></div>
+                        <p class="text-sm">Model sedang menganalisis koordinat...</p>
+                    </div>
+
+                    <!-- Output Area -->
+                    <pre id="outputArea" class="p-5 h-full w-full overflow-auto text-green-400 font-mono text-sm whitespace-pre-wrap break-words min-h-[600px]">// Hasil dari LLM akan muncul di sini...</pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data Default didefinisikan sebagai string untuk menjaga struktur horizontal khusus
+        const defaultSystemPromptStr = `{
+    "system": {
+        "role": "Agen validasi linguistik dan transliterasi Aksara Bali berbasis Large Language Model",
+        "description": "Agen ini bertugas mengubah hasil anotasi deteksi objek/OCR berupa bounding box Aksara Bali menjadi transliterasi Latin yang bermakna dengan mempertimbangkan posisi spasial, struktur aksara, aturan linguistik Aksara Bali, serta koherensi kata dan kalimat.",
+        "objectives": [
+            "Menganalisis setiap hasil deteksi berdasarkan koordinat spasial bounding box.",
+            "Menentukan urutan baca aksara berdasarkan hubungan horizontal dan vertikal, bukan berdasarkan urutan id.",
+            "Membedakan aksara utama, gantungan, gempelan, sandhangan vokal, tanda baca, dan elemen lain berdasarkan posisi relatifnya.",
+            "Menyelesaikan ambiguitas hasil deteksi, terutama pada bounding box yang saling tumpang tindih atau memiliki label ganda.",
+            "Menyusun hasil deteksi menjadi bacaan Latin yang sesuai secara fonetik, leksikal, dan kontekstual.",
+            "Melakukan normalisasi hasil bacaan agar sesuai dengan bentuk kata yang lazim dalam bahasa Bali atau bahasa Indonesia jika konteksnya mengarah ke bentuk umum."
+        ],
+        "input_format": {
+            "type": "JSON",
+            "description": "Input utama berupa JSON anotasi yang berisi daftar box hasil deteksi.",
+            "required_fields": ["detection_id", "class", "x", "y", "width", "height"],
+            "optional_fields": ["confidence", "class_id"]
+        },
+        "basic_principles": [
+            "Perlakukan seluruh nilai koordinat sebagai data numerik.",
+            "Jangan menggunakan urutan detection_id sebagai urutan baca final.",
+            "Tentukan urutan baca berdasarkan posisi spasial, terutama dari kiri ke kanan pada baris dasar yang sama.",
+            "Pertimbangkan hubungan vertikal karena Aksara Bali memiliki struktur bertingkat.",
+            "Gunakan confidence sebagai penentu mutlak apabila koherensi kata dan makna tidak berhasil ditangkap.",
+            "Utamakan koherensi struktur aksara, bentuk kata, dan makna kalimat dalam pengambilan keputusan akhir."
+        ],
+        "overlap_resolution_rules": [
+            "Deteksi terlebih dahulu apakah terdapat dua atau lebih box yang menempati area koordinat yang sama atau sangat beririsan.",
+            "Jika beberapa box saling tumpang tindih secara signifikan, jangan merangkai seluruh label tersebut sebagai aksara terpisah.",
+            "Pilih hanya satu box yang paling sesuai berdasarkan posisi spasial, pembentukan suku kata, koherensi kata, kesinambungan kalimat, dan skor confidence sebagai pertimbangan tambahan.",
+            "Jika box dengan confidence lebih rendah menghasilkan kata yang lebih koheren secara linguistik dibandingkan box dengan confidence lebih tinggi, pilih box yang lebih koheren secara konteks.",
+            "ATURAN CONFIDENCE (PENTING): Jika evaluasi konteks/makna gagal, masih ambigu, atau kata tidak dikenali dalam kamus bahasa Bali, Anda WAJIB memilih box yang memiliki skor confidence paling tinggi.",
+            "Abaikan box lain yang menyebabkan susunan aksara menjadi tidak logis, tidak terbaca, atau merusak struktur kata.",
+            "Jika hasil resolusi overlap masih ambigu, tampilkan alternatif bacaan beserta alasan pemilihannya."
+        ],
+        "spatial_analysis_rules": [
+            "Tentukan baseline atau baris dasar berdasarkan mayoritas posisi y dari aksara utama.",
+            "Kelompokkan box yang memiliki nilai y relatif mirip sebagai kandidat aksara pada baris utama.",
+            "Urutkan aksara utama dari nilai x terkecil ke nilai x terbesar.",
+            "Komponen yang berada di atas aksara utama diperlakukan sebagai sandhangan atas sesuai label/class dan posisi relatifnya.",
+            "Komponen yang berada di bawah aksara utama diperlakukan sebagai gantungan, gempelan, atau sandhangan bawah sesuai label/class dan posisi relatifnya.",
+            "Kaitkan setiap komponen atas atau bawah dengan aksara utama terdekat berdasarkan kedekatan sumbu x dan hubungan visualnya."
+        ],
+        "phonetic_rules": [
+            "Aksara utama secara default membawa vokal inheren /a/, misalnya ka, na, ta, dan da.",
+            "Jika aksara utama diikuti gantungan atau gempelan, vokal inheren pada aksara penumpu dianggap mati.",
+            "Jika terdapat adeg-adeg, vokal inheren pada aksara sebelumnya dianggap mati.",
+            "Sandhangan vokal seperti ulu, suku, pepet, taleng, dan taleng-tedong mengubah bunyi vokal pada aksara yang terkait."
+        ],
+        "transliteration_rules": [
+            "Susun terlebih dahulu bacaan mentah berdasarkan hasil analisis koordinat dan resolusi overlap.",
+            "Bentuk unit suku kata berdasarkan hubungan aksara utama dengan gantungan, gempelan, dan sandhangan.",
+            "Gabungkan unit suku kata menjadi kata.",
+            "Cocokkan hasil bacaan dengan bentuk kata yang lazim dalam bahasa Bali."
+        ],
+        "limitations": [
+            "Jangan menambahkan aksara, kata, atau makna yang tidak didukung oleh data box.",
+            "Jangan menghapus box kecuali terdapat alasan spasial atau linguistik yang jelas.",
+            "Jangan menganggap confidence tertinggi selalu benar, kecuali jika makna kata gagal dipahami dari hasil deteksi.",
+            "Jangan mengubah hasil menjadi kata kamus jika perubahan tersebut tidak didukung oleh struktur aksara."
+        ],
+        "workflow": [
+            "Konversi seluruh nilai koordinat menjadi angka.",
+            "Identifikasi dan kelompokkan box yang saling overlap.",
+            "Lakukan resolusi overlap dengan membandingkan alternatif kata yang terbentuk. Jadikan confidence tertinggi sebagai acuan mutlak jika makna tidak ditemukan.",
+            "Tentukan baseline dan kelompok baris utama.",
+            "Urutkan aksara utama dari kiri ke kanan.",
+            "Kaitkan sandhangan, gantungan, dan gempelan dengan aksara utama terdekat.",
+            "Bentuk gugus aksara dan suku kata.",
+            "Susun bacaan mentah.",
+            "Lakukan validasi fonetik, leksikal, dan kontekstual.",
+            "Hasilkan transliterasi akhir dalam aksara Latin."
+        ],
+        "output_format": {
+            "bacaan_mentah": "Hasil transliterasi sebelum normalisasi.",
+            "normalisasi_kamus": {
+                "sebelum": "Bacaan sebelum normalisasi.",
+                "sesudah": "Bacaan setelah normalisasi.",
+                "alasan": "Alasan normalisasi berdasarkan fonetik, kamus, atau konteks."
+            },
+            "hasil_akhir": "Transliterasi Latin final yang paling bermakna.",
+            "tingkat_kepercayaan": "Tinggi | Sedang | Rendah (Gunakan 'Rendah' jika hasil sangat bergantung pada confidence deteksi akibat tidak adanya makna kata yang dikenali)."
+        },
+        "final_instruction": "Setiap kali menerima input anotasi, lakukan seluruh analisis spasial secara internal. Jangan tampilkan proses analisis tersebut ke dalam output. Anda HANYA diperbolehkan mengeluarkan struktur JSON yang memuat 4 kunci: bacaan_mentah, normalisasi_kamus, hasil_akhir, dan tingkat_kepercayaan sesuai dengan format keluaran yang telah ditetapkan."
+    }
+}`;
+
+        // Format horizontal khusus JSON YOLO
+        const defaultUserInputStr = `{
+    "predictions": [
+        {"x": 1235, "y": 567, "width": 314, "height": 162, "confidence": 0.949, "class": "ta", "class_id": 65, "detection_id": "2fb336c3-3c22-4e8c-a8ec-2edcb986a6b0"},
+        {"x": 940, "y": 577, "width": 294, "height": 172, "confidence": 0.708, "class": "ka", "class_id": 46, "detection_id": "419b1c6b-b6f9-436d-af1e-f4fe4d85ecb3"},
+        {"x": 397, "y": 569.5, "width": 262, "height": 155, "confidence": 0.477, "class": "da", "class_id": 17, "detection_id": "f40bccbb-5f27-4bc2-929a-633e6aebde0a"},
+        {"x": 397, "y": 569.5, "width": 262, "height": 155, "confidence": 0.157, "class": "na", "class_id": 50, "detection_id": "589940a6-88fd-458d-bb0d-331de386cb2b"},
+        {"x": 187.5, "y": 677.5, "width": 211, "height": 415, "confidence": 0.040, "class": "taleng", "class_id": 68, "detection_id": "6e7fe715-99ab-41df-ac19-03f117e671ac"},
+        {"x": 940, "y": 577, "width": 294, "height": 172, "confidence": 0.019, "class": "na", "class_id": 50, "detection_id": "68aacc39-52e3-4b2f-a764-59b9d6ac4197"}
+    ]
+}`;
+
+        // Inisialisasi nilai textarea saat dimuat
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('systemPrompt').value = defaultSystemPromptStr;
+            document.getElementById('userInput').value = defaultUserInputStr;
+        });
+
+        // Fungsi Eksekusi
+        async function runInference() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            const sysPrompt = document.getElementById('systemPrompt').value;
+            const usrInput = document.getElementById('userInput').value;
+            const outputArea = document.getElementById('outputArea');
+            const errorMsg = document.getElementById('errorMessage');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const runBtn = document.getElementById('runBtn');
+
+            // Reset UI states
+            errorMsg.classList.add('hidden');
+            errorMsg.innerText = '';
+            outputArea.innerText = '';
+            loadingOverlay.classList.remove('hidden');
+            runBtn.disabled = true;
+            runBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                // Konfigurasi fetch untuk Pollinations API
+                const url = 'https://gen.pollinations.ai/v1/chat/completions';
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // Tambahkan API Key jika diisi
+                if (apiKey) {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                }
+
+                const payload = {
+                    model: model,
+                    messages: [
+                        { role: "system", content: sysPrompt },
+                        { role: "user", content: usrInput }
+                    ],
+                    response_format: { type: "json_object" } // Memaksa format keluaran berupa JSON
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Error API (${response.status}): ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                    const rawOutput = data.choices[0].message.content;
+                    
+                    // Coba format JSON agar tampil rapi
+                    try {
+                        const parsedJSON = JSON.parse(rawOutput);
+                        outputArea.innerText = JSON.stringify(parsedJSON, null, 4);
+                    } catch (e) {
+                        // Jika kebetulan LLM membungkus dalam markdown atau bukan JSON valid
+                        outputArea.innerText = rawOutput;
+                    }
+                } else {
+                    throw new Error("Format respons API tidak sesuai dugaan.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                errorMsg.innerText = `Terjadi Kesalahan: ${error.message}`;
+                errorMsg.classList.remove('hidden');
+                outputArea.innerText = "// Eksekusi gagal. Silakan lihat pesan error.";
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                runBtn.disabled = false;
+                runBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Fungsi Copy Clipboard
+        function copyOutput() {
+            const outputText = document.getElementById('outputArea').innerText;
+            if (!outputText || outputText.startsWith('//')) return;
+            
+            // Fallback copy using execCommand (berfungsi di iframe)
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = outputText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert("Hasil berhasil disalin ke clipboard!");
+            } catch (err) {
+                console.error("Gagal menyalin teks: ", err);
+            }
+            
+            document.body.removeChild(tempTextArea);
+        }
+    </script>
+</body>
+</html>
