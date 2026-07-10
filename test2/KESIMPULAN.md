@@ -59,6 +59,13 @@ Hasil akhir dari validator dapat dilihat pada file berikut:
     "tingkat_kepercayaan": "Sedang"
 }
 ```
+Teks Sebenarnya:
+```
+Pemberdayaan dan Kesejahteraan Keluarga
+PKK
+Tim Penggerak Kelurahan Karangasem
+```
+
 [Klik untuk melihat ValidatorOutput.json](ValidatorOutput.json)
 
 Validator digunakan untuk memeriksa kesesuaian antara:
